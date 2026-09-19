@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 💕</title>
+
+<!--
+  ============================================================
+  HOW TO CUSTOMIZE THIS PAGE
+  ============================================================
+  Everything you need to change lives in ONE place: the CONFIG
+  object near the top of the <script> tag at the bottom of this
+  file (search for "CONFIG = {"). There you can change:
+
+    0. musicFile          — your mp3 file name for the background music
+    1. password           — what she needs to type to get in
+    2. girlfriendName     — her name / what you call her
+    3. questions          — the quiz questions, options, answers
+    4. mainMessage        — the long typewriter love letter
+    5. hiddenMessage      — the "open when you're missing me" note
+    6. finalLine          — the very last goodbye line
+
+  CAT PHOTO: search for PASTE_YOUR_CAT_IMAGE_HERE below and replace
+  it with your original image (the long data:image/png;base64,...
+  string from your old file, or a normal image file name).
+
+  MUSIC: put your .mp3 in the same folder as this file and name it
+  music.mp3 (or change musicFile in CONFIG). If you upload the site
+  (Netlify etc.), upload the folder with BOTH files inside.
+  ============================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,500&family=Quicksand:wght@400;500;600;700&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ================= COLORS — change your palette here ================= */
+  :root{
+    --cream:      #fff8f4;   /* page background */
+    --paper:      #fffdfb;   /* card background */
+    --blush:      #ffe2ec;   /* soft pink accent */
+    --lavender:   #ebe1fb;   /* soft purple accent */
+    --rose:       #e0567f;   /* primary buttons / accents */
+    --rose-deep:  #c23f68;   /* button hover */
+    --plum:       #4f3455;   /* main text color */
+    --plum-soft:  #8a758f;   /* secondary text color */
+    --gold:       #e8b976;   /* wax-seal / sparkle accent */
+    --shadow:     rgba(79, 52, 85, 0.16);
+
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body:    'Quicksand', sans-serif;
+    --font-hand:    'Caveat', cursive;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+  }
+
+  body{
+    font-family: var(--font-body);
+    color: var(--plum);
+    background:
+      radial-gradient(circle at 15% 10%, var(--blush) 0%, transparent 45%),
+      radial-gradient(circle at 85% 90%, var(--lavender) 0%, transparent 50%),
+      var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* Respect people who prefer less motion */
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+
+  button{ font-family:inherit; }
+  a{ color:inherit; }
+
+  /* visible focus ring for keyboard users */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  [tabindex]:focus-visible{
+    outline: 3px solid var(--rose);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+
+  h1,h2,h3{
+    font-family: var(--font-display);
+    font-weight:600;
+    margin:0 0 0.4em;
+    color: var(--plum);
+  }
+
+  p{ margin:0 0 1em; line-height:1.6; }
+
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  /* ---------------- music button ---------------- */
+  .music-toggle{
+    position:fixed; top:14px; right:14px; z-index:90;
+    width:44px; height:44px; border-radius:50%;
+    border:1px solid rgba(224,86,127,0.2);
+    background:var(--paper); font-size:1.2rem; cursor:pointer;
+    box-shadow:0 8px 18px -8px var(--shadow);
+    transition: transform 160ms ease;
+  }
+  .music-toggle:hover{ transform:scale(1.08); }
+  .music-toggle[hidden]{ display:none; }
+
+  /* ---------------- floating hearts background ---------------- */
+  #heart-field{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    overflow:hidden;
+    z-index:0;
+  }
+  .bg-heart{
+    position:absolute;
+    bottom:-10%;
+    font-size:1.4rem;
+    color: var(--rose);
+    opacity:0.35;
+    will-change: transform, opacity;
+    animation-name: floatUp;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+    user-select:none;
+  }
+  @keyframes floatUp{
+    0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity:0; }
+    10%  { opacity:0.45; }
+    100% { transform: translateY(-115vh) translateX(var(--drift, 20px)) rotate(25deg); opacity:0; }
+  }
+
+  /* click-burst hearts */
+  .burst-heart{
+    position:fixed;
+    pointer-events:none;
+    font-size:1.1rem;
+    color: var(--rose);
+    z-index:50;
+    animation: burstUp 900ms ease-out forwards;
+  }
+  @keyframes burstUp{
+    0%   { transform: translate(0,0) scale(0.6); opacity:1; }
+    100% { transform: translate(var(--bx,0px), -70px) scale(1.2); opacity:0; }
+  }
+
+  /* ---------------- layout shell ---------------- */
+  .stage{
+    position:relative;
+    z-index:1;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 28px 16px;
+  }
+
+  .screen{
+    display:none;
+    width:100%;
+    max-width:560px;
+  }
+  .screen.active{
+    display:block;
+    animation: riseIn 550ms ease both;
+  }
+  @keyframes riseIn{
+    from{ opacity:0; transform: translateY(18px) scale(0.98); }
+    to  { opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  .card{
+    background: var(--paper);
+    border-radius: 22px;
+    padding: 38px 30px;
+    box-shadow: 0 18px 40px -12px var(--shadow), 0 2px 10px var(--shadow);
+    position:relative;
+    border: 1px solid rgba(224,86,127,0.10);
+  }
+
+  /* little torn-paper / deckle feel along the top edge */
+  .card::before{
+    content:"";
+    position:absolute;
+    top:-1px; left:14px; right:14px;
+    height:10px;
+    background-image: radial-gradient(circle at 6px 0, transparent 5px, var(--paper) 5.5px);
+    background-size: 12px 10px;
+    background-repeat: repeat-x;
+  }
+
+  .eyebrow{
+    font-family: var(--font-hand);
+    font-size: 1.25rem;
+    color: var(--rose);
+    margin-bottom: 2px;
+  }
+
+  .wax-seal{
+    width:54px; height:54px;
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, var(--gold), #c98f42 75%);
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.4rem;
+    color:#fff8ee;
+    margin: 0 auto 18px;
+    box-shadow: 0 6px 14px rgba(201,143,66,0.45), inset 0 -3px 6px rgba(0,0,0,0.18);
+  }
+
+  /* ---------------- password screen ---------------- */
+  #screen-password .card{ text-align:center; }
+
+  .pw-field{
+    position:relative;
+    margin: 22px 0 6px;
+  }
+  .pw-field input{
+    width:100%;
+    padding: 14px 46px 14px 18px;
+    border-radius: 14px;
+    border: 1.5px solid var(--blush);
+    background: #fffaf8;
+    font-size: 1.05rem;
+    font-family: var(--font-body);
+    color: var(--plum);
+    letter-spacing: 1px;
+  }
+  .pw-field input::placeholder{ color: var(--plum-soft); letter-spacing:normal; }
+
+  .pw-toggle{
+    position:absolute;
+    right:8px; top:50%;
+    transform: translateY(-50%);
+    background:none;
+    border:none;
+    cursor:pointer;
+    font-size:1.15rem;
+    padding:6px 8px;
+    border-radius:8px;
+    color: var(--plum-soft);
+  }
+  .pw-toggle:hover{ color: var(--rose); }
+
+  .error-msg{
+    min-height: 1.4em;
+    color: var(--rose-deep);
+    font-family: var(--font-hand);
+    font-size: 1.15rem;
+    margin-top: 8px;
+  }
+  .shake{ animation: shake 420ms; }
+  @keyframes shake{
+    10%,90%{ transform: translateX(-2px); }
+    20%,80%{ transform: translateX(4px); }
+    30%,50%,70%{ transform: translateX(-7px); }
+    40%,60%{ transform: translateX(7px); }
+  }
+
+  /* ---------------- buttons ---------------- */
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    border:none;
+    cursor:pointer;
+    border-radius: 999px;
+    padding: 13px 28px;
+    font-size: 1rem;
+    font-weight:600;
+    font-family: var(--font-body);
+    transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--rose), var(--rose-deep));
+    color:#fff8f9;
+    box-shadow: 0 10px 22px -8px rgba(194,63,104,0.55);
+  }
+  .btn-primary:hover{ transform: translateY(-2px); box-shadow: 0 14px 26px -8px rgba(194,63,104,0.6); }
+  .btn-primary:active{ transform: translateY(0); }
+
+  .btn-ghost{
+    background: var(--lavender);
+    color: var(--plum);
+  }
+  .btn-ghost:hover{ background:#e2d3fa; transform: translateY(-2px); }
+
+  .btn-text{
+    background:none;
+    color: var(--plum-soft);
+    padding: 10px 14px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .btn-text:hover{ color: var(--rose); }
+
+  .btn[disabled]{ opacity:0.45; cursor:not-allowed; transform:none !important; box-shadow:none !important; }
+
+  .btn-row{
+    display:flex;
+    gap:12px;
+    margin-top: 24px;
+    flex-wrap:wrap;
+  }
+  .btn-row.center{ justify-content:center; }
+  .btn-row.between{ justify-content:space-between; }
+
+  /* ---------------- question section ---------------- */
+  .progress-dots{
+    display:flex;
+    gap:7px;
+    justify-content:center;
+    margin-bottom: 20px;
+  }
+  .progress-dots span{
+    width:8px; height:8px; border-radius:50%;
+    background: var(--blush);
+    transition: background 200ms, transform 200ms;
+  }
+  .progress-dots span.done{ background: var(--rose); transform: scale(1.15); }
+
+  .q-label{
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-style: italic;
+    margin-bottom: 18px;
+    line-height:1.35;
+  }
+
+  .options{ display:flex; flex-direction:column; gap:10px; }
+  .option{
+    text-align:left;
+    background: #fffaf8;
+    border: 1.5px solid var(--blush);
+    border-radius: 14px;
+    padding: 13px 16px;
+    cursor:pointer;
+    font-size: 0.98rem;
+    color: var(--plum);
+    transition: border-color 160ms, background 160ms, transform 160ms;
+  }
+  .option:hover{ border-color: var(--rose); background:#fff2f6; }
+  .option.selected{
+    border-color: var(--rose);
+    background: var(--blush);
+    font-weight:600;
+  }
+  .option.correct{
+    background: #e3f6ea;
+    border-color: #4caf82;
+    color: #1f6b46;
+    font-weight:700;
+  }
+  .option.incorrect{
+    background: #fde3ea;
+    border-color: #e0567f;
+    color: #8a2f45;
+    text-decoration: line-through;
+  }
+  .option:disabled{ cursor: default; }
+  .option:disabled:not(.selected):not(.correct){ opacity: 0.55; }
+  .option:disabled:hover{ transform:none; }
+
+  .text-answer{
+    width:100%;
+    min-height: 84px;
+    resize: vertical;
+    padding: 13px 16px;
+    border-radius: 14px;
+    border: 1.5px solid var(--blush);
+    background: #fffaf8;
+    font-family: var(--font-body);
+    font-size: 0.98rem;
+    color: var(--plum);
+  }
+
+  .q-response{
+    margin-top: 16px;
+    padding: 14px 16px;
+    background: var(--lavender);
+    border-radius: 14px;
+    font-family: var(--font-hand);
+    font-size: 1.2rem;
+    color: var(--plum);
+    display:none;
+  }
+  .q-response.show{ display:block; animation: riseIn 350ms ease both; }
+  .q-response.wrong{ background: #fde3ea; color: #8a2f45; }
+
+  /* ---------------- results screen ---------------- */
+  .score-badge{
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    text-align:center;
+    color: var(--rose);
+    margin: 6px 0 2px;
+  }
+  .score-line{
+    text-align:center;
+    font-family: var(--font-hand);
+    font-size: 1.3rem;
+    color: var(--plum-soft);
+    margin-bottom: 18px;
+  }
+
+  /* ---------------- love letter / typewriter ---------------- */
+  .letter{
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1.75;
+    min-height: 210px;
+    white-space: pre-wrap;
+  }
+  .caret{
+    display:inline-block;
+    width: 2px;
+    background: var(--rose);
+    margin-left:2px;
+    animation: blink 900ms step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .signature{
+    font-family: var(--font-hand);
+    font-size: 1.5rem;
+    color: var(--rose);
+    margin-top: 14px;
+  }
+
+  /* ---------------- hidden note modal ---------------- */
+  .modal-backdrop{
+    position:fixed; inset:0;
+    background: rgba(79,52,85,0.35);
+    backdrop-filter: blur(2px);
+    display:flex; align-items:center; justify-content:center;
+    z-index:80;
+    padding: 20px;
+    opacity:0;
+    pointer-events:none;
+    transition: opacity 220ms ease;
+  }
+  .modal-backdrop.open{ opacity:1; pointer-events:auto; }
+  .modal-card{
+    background: var(--paper);
+    border-radius:20px;
+    max-width: 440px;
+    width:100%;
+    padding: 30px 26px;
+    box-shadow: 0 24px 50px -12px rgba(0,0,0,0.35);
+    transform: translateY(14px) scale(0.97);
+    transition: transform 220ms ease;
+    text-align:center;
+  }
+  .modal-backdrop.open .modal-card{ transform: translateY(0) scale(1); }
+  .modal-card p{ font-family: var(--font-display); font-size:1.15rem; }
+
+  /* ---------------- judging cat sticker (wrong password) ---------------- */
+  .cat-sticker{
+    width:200px;
+    aspect-ratio: 2 / 1;
+    margin: 0 auto 14px;
+    border-radius: 26px;
+    padding: 5px;
+    background: linear-gradient(160deg, var(--rose), var(--gold));
+    box-shadow: 0 10px 20px -8px rgba(0,0,0,0.3);
+    animation: catStare 2.2s ease-in-out infinite;
+  }
+  .cat-photo{
+    width:100%; height:100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 22px;
+    display:block;
+    border: 3px solid var(--paper);
+    animation: catLook 2.2s ease-in-out infinite;
+  }
+  /* shown if the photo is missing / fails to load */
+  .cat-fallback{
+    width:100%; height:100%;
+    display:none;
+    align-items:center; justify-content:center;
+    font-size:3rem;
+    background: var(--paper);
+    border-radius: 22px;
+  }
+  @keyframes catStare{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.04); }
+  }
+  @keyframes catLook{
+    0%, 15%{ transform: translateX(0) rotate(0deg); }
+    30%{ transform: translateX(-3px) rotate(-2deg); }
+    50%{ transform: translateX(0) rotate(0deg); }
+    65%{ transform: translateX(3px) rotate(2deg); }
+    85%, 100%{ transform: translateX(0) rotate(0deg); }
+  }
+  .wrong-pw-text{
+    font-family: var(--font-hand);
+    font-size: 1.35rem;
+    color: var(--plum);
+  }
+
+  /* ---------------- final screen ---------------- */
+  #screen-final .card{ text-align:center; }
+  .final-heart{
+    font-size: 2.6rem;
+    color: var(--rose);
+    display:inline-block;
+    margin-bottom: 10px;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{ transform: scale(1); }
+    50%{ transform: scale(1.12); }
+  }
+
+  footer.hint{
+    text-align:center;
+    color: var(--plum-soft);
+    font-size:0.78rem;
+    margin-top: 18px;
+    position:relative;
+    z-index:1;
+  }
+
+  @media (max-width: 420px){
+    .card{ padding: 30px 20px; border-radius:18px; }
+    .letter{ font-size: 1.1rem; }
+    .q-label{ font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- decorative floating hearts live here, filled by JS -->
+<div id="heart-field" aria-hidden="true"></div>
+
+<!-- background music (mp3) -->
+<audio id="bg-music" loop preload="auto" autoplay playsinline></audio>
+
+<main class="stage">
+
+  <!-- ============ SCREEN 1 : PASSWORD ============ -->
+  <section id="screen-password" class="screen active" aria-labelledby="pw-heading">
+    <div class="card">
+      <div class="wax-seal">💌</div>
+      <p class="eyebrow">a little door, just for you</p>
+      <h1 id="pw-heading">This little place is only for you ❤️</h1>
+      <p>You'll know exactly what to type.</p>
+
+      <form id="pw-form" novalidate>
+        <div class="pw-field">
+          <label for="pw-input" class="sr-only">Password</label>
+          <input
+            id="pw-input"
+            name="password"
+            type="password"
+            inputmode="text"
+            autocomplete="off"
+            placeholder="Type the password..."
+            aria-describedby="pw-error"
+          />
+          <button type="button" class="pw-toggle" id="pw-toggle" aria-label="Show password" aria-pressed="false">👁️</button>
+        </div>
+        <p id="pw-error" class="error-msg" role="alert" aria-live="polite"></p>
+        <div class="btn-row center">
+          <button type="submit" class="btn btn-primary">Open the door 🔑</button>
+        </div>
+      </form>
+    </div>
+    <footer class="hint">made with love, just for you</footer>
+  </section>
+
+  <!-- ============ SCREEN 2 : WELCOME ============ -->
+  <section id="screen-welcome" class="screen" aria-labelledby="welcome-heading">
+    <div class="card" style="text-align:center;">
+      <div class="wax-seal">🌸</div>
+      <p class="eyebrow">you found it</p>
+      <h1 id="welcome-heading">Hi, <span id="welcome-name">love</span>.</h1>
+      <p>I made this little corner of the internet just for you. Before I show you what's waiting, answer a few questions about us — no pressure, just for fun.</p>
+      <div class="btn-row center">
+        <button type="button" class="btn btn-primary" id="start-questions">Okay, ask me 🥹</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 3 : QUESTIONS ============ -->
+  <section id="screen-questions" class="screen" aria-labelledby="q-heading">
+    <div class="card">
+      <div class="progress-dots" id="progress-dots"></div>
+      <h2 id="q-heading" class="sr-only">Question</h2>
+      <p class="q-label" id="q-text"></p>
+
+      <div id="q-options" class="options"></div>
+      <textarea id="q-textarea" class="text-answer" style="display:none;" aria-label="Your answer"></textarea>
+
+      <p id="q-response" class="q-response" aria-live="polite"></p>
+
+      <div class="btn-row between">
+        <button type="button" class="btn btn-text" id="q-back">← Back</button>
+        <button type="button" class="btn btn-primary" id="q-next" disabled>Next →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 4 : RESULTS ============ -->
+  <section id="screen-results" class="screen" aria-labelledby="results-heading">
+    <div class="card" style="text-align:center;">
+      <div class="wax-seal">🏆</div>
+      <p class="eyebrow">the verdict</p>
+      <h1 id="results-heading">How well do you know me?</h1>
+      <p class="score-badge" id="score-badge"></p>
+      <p class="score-line" id="score-line"></p>
+      <p>Either way, you already know the part that matters most.</p>
+      <div class="btn-row center">
+        <button type="button" class="btn btn-primary" id="go-to-message">Now, read this 💌</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 5 : LOVE LETTER ============ -->
+  <section id="screen-message" class="screen" aria-labelledby="letter-heading">
+    <div class="card">
+      <p class="eyebrow">from me, to you</p>
+      <h1 id="letter-heading" class="sr-only">A letter for you</h1>
+      <div class="letter" id="letter-text" aria-live="polite"></div>
+      <p class="signature" id="letter-signature" style="display:none;"></p>
+
+      <div class="btn-row between" style="margin-top:26px;">
+        <button type="button" class="btn btn-ghost" id="read-again">Read Again ❤️</button>
+        <button type="button" class="btn btn-text" id="miss-me-btn">Open when you're missing me 💌</button>
+      </div>
+      <div class="btn-row center">
+        <button type="button" class="btn btn-primary" id="go-to-final">Keep going →</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREEN 6 : FINAL ============ -->
+  <section id="screen-final" class="screen" aria-labelledby="final-heading">
+    <div class="card">
+      <span class="final-heart" id="final-heart-click" role="button" tabindex="0" aria-label="Tap for a little surprise">❤️</span>
+      <h1 id="final-heading"><span id="final-text">Thank you for being part of my life. I love you ❤️</span></h1>
+      <p style="color:var(--plum-soft);">(go on, tap that heart above)</p>
+      <div class="btn-row center">
+        <button type="button" class="btn btn-ghost" id="restart-btn">Start over 🔁</button>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- wrong password modal, with a judging cat -->
+<div class="modal-backdrop" id="wrong-pw-modal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wrong-pw-text">
+    <div class="cat-sticker" aria-hidden="true">
+      <!-- REPLACE PASTE_YOUR_CAT_IMAGE_HERE below with your original image
+           (the long data:image/png;base64,... string, or a file name like cat.png) -->
+      <img src="PASTE_YOUR_CAT_IMAGE_HERE" alt="" class="cat-photo"
+           onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+      <div class="cat-fallback">😾</div>
+    </div>
+    <p id="wrong-pw-text" class="wrong-pw-text"></p>
+    <button type="button" class="btn btn-primary" id="wrong-pw-close">Try again</button>
+  </div>
+</div>
+
+<!-- hidden "missing me" note -->
+<div class="modal-backdrop" id="miss-me-modal" aria-hidden="true">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="miss-me-title">
+    <p class="eyebrow" id="miss-me-title">open only when you miss me</p>
+    <p id="miss-me-text"></p>
+    <button type="button" class="btn btn-primary" id="miss-me-close">Close</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIG — this is the only place you should need to edit.
+   ============================================================ */
+const CONFIG = {
+
+  // 0) BACKGROUND MUSIC — put your mp3 in the SAME folder as this file
+  //    and type its exact file name here (or use a full https:// link to an mp3)
+  musicFile: "music/Himawari.mp3",
+  musicVolume: 0.6,   // 0 (silent) to 1 (full)
+
+  // 1) THE PASSWORD — change this to whatever you like
+  //    (an anniversary date, an inside joke, her name — up to you)
+  password: "080226",
+
+  // 2) HER NAME — shown on the welcome screen
+  girlfriendName: "Baby jaya ko",
+
+  // 3) THE QUESTIONS
+  //    type: "mc" (multiple choice, scored) or "text" (free answer, not scored)
+  //    For "mc" questions, correctIndex points at the options array below.
+  //    Set correctIndex to -1 if you want every answer to count as correct.
+  questions: [
+    {
+      type: "mc",
+      question: "What is my favorite thing about you?",
+      options: ["Your smile", "Your laugh", "Your kindness", "Honestly, all of it"],
+      correctIndex: 3,
+      response: "Syempre, lahat gusto ko sayo my baby liit ko "
+    },
+    {
+      type: "text",
+      question: "What nickname do I love calling you?",
+      placeholder: "Type it here...",
+      response: (answer) => `yes naman, ikaw lang naman "${answer}" ko eh `
+    },
+    {
+      type: "text",
+      question: "What do you love the most about me?",
+      placeholder: "Tell me about it...",
+      response: (answer) => `yii ikaw ha, kenekeleg na ako nyan babygurl ko`
+    },
+    {
+      type: "mc",
+      question: "What do you think I love most about you?",
+      options: ["How you make me laugh", "How safe I feel with you", "How you see me", "All of the above"],
+      correctIndex: 3,
+      response: "Tama, lahat yan baby ko, galing ng bebe gurl ko"
+    },
+    {
+      type: "mc",
+      question: "How well do you think you know me? ❤️",
+      options: ["Like the back of my hand", "Pretty well", "We're still learning each other", "Better every single day"],
+      correctIndex: -1, // every answer is the right answer here
+      response: "Kahit ano piliin mo tama ka baby kasi girl always right eh HAAHAH jwk lang mwamwa"
+    }
+  ],
+
+  // 4) THE LOVE LETTER — shown with a typewriter animation.
+  //    Use \n\n for a paragraph break.
+  mainMessage:
+`Hello baby ko,i just want to say i loveyou baby di ako nag sisi baby na pinili kita at nag risk ako sayo and also baby pag pasensyahan mo na ako baby ko ha alam ko minsan talaga kung ano ano pumapasok sa isip ko baby ko pero alam mo naman how much i loveyou baby ko diba??? hehehehh
+
+pero yun lang baby ko, uhm,  i just want to say i'm so happy na meron akong katulad mo merong akong gf na maalaga at mapagmahal Kahit minsan nagagalit kita or naiinis but still baby ko you always choose me, alam ko na di pa natin alam talaga ang future pero i want you baby to become my wife and build a family with you baby ko,
+
+and also baby thank you kasi minahal mo ko ng totoo baby ko, honestly baby ko ang swerte ko sayo never ako nag karoon ng gf na understanding ikaw palang baby ko, kaya baby never kita papakawalan ha mahal na mahal kita,
+
+sorry kung minsan ano baby nag iisip ako ng kung ano ano uhhuhuhu sorry baby ko basta always remember baby na i will always love you and i always choose you okay,
+
+papakasalan pa kita oh gagawa pa tayo ng baby na si kaia yiii ehehh mwamwa baby ko, kapit ka lang ha ipapanalo natin toh baby mwamwa,
+
+iloveyou baby ko💗💗💗💗💗💗💗💗💗💗💗`,
+
+  // signature under the letter
+  signatureName: "your baby markie",
+
+  // the "open when you're missing me" secret note
+  hiddenMessage:
+"If nababasa mo toh ngayon, i just want to say mahal na mahal na mahal na mahal na mahal kita baby ko aalagaan kita iingatan at mamahalin baby ko ikaw lang want ko makasama in the future baby ko, i love you baby ko",
+
+  // 5) THE FINAL LINE
+  finalLine: "Maraming salamat sa lahat baby ko, i love you baby ko, i will always choose you baby ko, i will always love you baby ko,"
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  answers: [],       // stores { selectedIndex } or { text } per question — set only once correct/final
+  wrongTries: [],    // for mc questions: array of wrong option indices already tried, per question
+  currentQ: 0,
+  score: 0,
+  scoreable: 0
+};
+
+/* ============================================================
+   FLOATING BACKGROUND HEARTS
+   ============================================================ */
+const heartField = document.getElementById('heart-field');
+const HEART_CHARS = ['❤️','💕','💗','💖'];
+
+function spawnBgHeart(){
+  const heart = document.createElement('span');
+  heart.className = 'bg-heart';
+  heart.textContent = HEART_CHARS[Math.floor(Math.random() * HEART_CHARS.length)];
+  const left = Math.random() * 100;
+  const duration = 7 + Math.random() * 6;
+  const size = 0.9 + Math.random() * 1.1;
+  const drift = (Math.random() * 80 - 40) + 'px';
+  heart.style.left = left + 'vw';
+  heart.style.fontSize = size + 'rem';
+  heart.style.animationDuration = duration + 's';
+  heart.style.setProperty('--drift', drift);
+  heartField.appendChild(heart);
+  setTimeout(() => heart.remove(), duration * 1000 + 200);
+}
+setInterval(spawnBgHeart, 900);
+for (let i = 0; i < 6; i++) setTimeout(spawnBgHeart, i * 300);
+
+/* click / tap heart burst, anywhere on the page */
+document.addEventListener('click', (e) => {
+  // skip bursts on form controls so it doesn't feel noisy while typing
+  const tag = e.target.tagName;
+  if (['INPUT','TEXTAREA','BUTTON'].includes(tag)) return;
+  spawnBurst(e.clientX, e.clientY);
+});
+
+function spawnBurst(x, y){
+  for (let i = 0; i < 4; i++){
+    const h = document.createElement('span');
+    h.className = 'burst-heart';
+    h.textContent = HEART_CHARS[Math.floor(Math.random() * HEART_CHARS.length)];
+    h.style.left = (x - 8) + 'px';
+    h.style.top = (y - 8) + 'px';
+    h.style.setProperty('--bx', (Math.random() * 60 - 30) + 'px');
+    document.body.appendChild(h);
+    setTimeout(() => h.remove(), 950);
+  }
+}
+
+/* ============================================================
+   SCREEN NAVIGATION
+   ============================================================ */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById(id);
+  el.classList.add('active');
+  const heading = el.querySelector('h1, h2');
+  if (heading) { heading.setAttribute('tabindex', '-1'); heading.focus({ preventScroll: true }); }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* ============================================================
+   PASSWORD SCREEN
+   ============================================================ */
+const pwForm   = document.getElementById('pw-form');
+const pwInput  = document.getElementById('pw-input');
+const pwToggle = document.getElementById('pw-toggle');
+const pwError  = document.getElementById('pw-error');
+
+pwToggle.addEventListener('click', () => {
+  const showing = pwInput.type === 'text';
+  pwInput.type = showing ? 'password' : 'text';
+  pwToggle.textContent = showing ? '👁️' : '🙈';
+  pwToggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+  pwToggle.setAttribute('aria-pressed', String(!showing));
+  pwInput.focus();
+});
+
+pwForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const value = pwInput.value.trim();
+  if (value.toLowerCase() === CONFIG.password.toLowerCase()) {
+    pwError.textContent = '';
+    document.getElementById('welcome-name').textContent = CONFIG.girlfriendName;
+    showScreen('screen-welcome');
+  } else {
+    const card = pwForm.closest('.card');
+    card.classList.remove('shake');
+    void card.offsetWidth; // restart animation
+    card.classList.add('shake');
+    openWrongPwModal();
+  }
+});
+
+/* ---------------- wrong password modal (judging cat) ---------------- */
+const wrongPwModal = document.getElementById('wrong-pw-modal');
+const wrongPwText   = document.getElementById('wrong-pw-text');
+const wrongPwClose  = document.getElementById('wrong-pw-close');
+
+function openWrongPwModal(){
+  // 6) THE WRONG-PASSWORD LINE — edit this if you want to change what the cat says
+  wrongPwText.textContent = "you don't know na ah kung kelan mo ko sinagot hmmm";
+  wrongPwModal.classList.add('open');
+  wrongPwClose.focus();
+}
+function closeWrongPwModal(){
+  wrongPwModal.classList.remove('open');
+  pwInput.value = '';
+  pwInput.focus();
+}
+wrongPwClose.addEventListener('click', closeWrongPwModal);
+wrongPwModal.addEventListener('click', (e) => { if (e.target === wrongPwModal) closeWrongPwModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && wrongPwModal.classList.contains('open')) closeWrongPwModal();
+});
+
+/* ============================================================
+   WELCOME → QUESTIONS
+   ============================================================ */
+document.getElementById('start-questions').addEventListener('click', () => {
+  state.currentQ = 0;
+  buildProgressDots();
+  renderQuestion();
+  showScreen('screen-questions');
+});
+
+/* ============================================================
+   QUESTIONS
+   ============================================================ */
+const dotsWrap   = document.getElementById('progress-dots');
+const qText      = document.getElementById('q-text');
+const qOptions   = document.getElementById('q-options');
+const qTextarea  = document.getElementById('q-textarea');
+const qResponse  = document.getElementById('q-response');
+const qNextBtn   = document.getElementById('q-next');
+const qBackBtn   = document.getElementById('q-back');
+
+function buildProgressDots(){
+  dotsWrap.innerHTML = '';
+  CONFIG.questions.forEach(() => {
+    const d = document.createElement('span');
+    dotsWrap.appendChild(d);
+  });
+}
+
+function updateDots(){
+  [...dotsWrap.children].forEach((d, i) => {
+    d.classList.toggle('done', i <= state.currentQ && !!state.answers[i]);
+  });
+}
+
+function renderQuestion(){
+  const i = state.currentQ;
+  const q = CONFIG.questions[i];
+  const existing = state.answers[i];
+
+  qText.textContent = q.question;
+  qResponse.classList.remove('show', 'wrong');
+  qResponse.textContent = '';
+  qNextBtn.textContent = (i === CONFIG.questions.length - 1) ? 'See my score →' : 'Next →';
+  qNextBtn.disabled = !existing;
+  qBackBtn.style.visibility = (i === 0) ? 'hidden' : 'visible';
+
+  if (q.type === 'mc') {
+    qTextarea.style.display = 'none';
+    qOptions.style.display = 'flex';
+    qOptions.innerHTML = '';
+    q.options.forEach((opt, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'option';
+      btn.textContent = opt;
+      btn.setAttribute('aria-pressed', 'false');
+      btn.addEventListener('click', () => selectOption(idx));
+      qOptions.appendChild(btn);
+    });
+    if (existing) {
+      showResponse(q, existing);
+    } else {
+      const tries = state.wrongTries[i];
+      if (tries && tries.length) {
+        showResponse(q, { selectedIndex: tries[tries.length - 1] });
+      }
+    }
+    renderOptionButtons(q, i);
+  } else {
+    qOptions.style.display = 'none';
+    qTextarea.style.display = 'block';
+    qTextarea.value = existing ? existing.text : '';
+    qTextarea.placeholder = q.placeholder || 'Type your answer...';
+    if (existing) showResponse(q, existing);
+  }
+
+  updateDots();
+}
+
+// Redraws every option button for question index i:
+// - options already tried and wrong stay disabled and red
+// - once the correct option has been found, everything locks (green on correct)
+// - otherwise, untried options stay clickable so she can try again
+function renderOptionButtons(q, i){
+  const finalAnswer = state.answers[i];
+  const tries = state.wrongTries[i] || [];
+  [...qOptions.children].forEach((btn, bi) => {
+    btn.classList.remove('selected', 'correct', 'incorrect');
+    btn.disabled = false;
+    btn.setAttribute('aria-pressed', 'false');
+
+    if (tries.includes(bi)) {
+      btn.disabled = true;
+      btn.classList.add('incorrect');
+    }
+
+    if (finalAnswer) {
+      btn.disabled = true; // locked — the right answer's been found
+      if (bi === finalAnswer.selectedIndex) {
+        btn.classList.add('selected');
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      if (q.correctIndex !== -1) {
+        if (bi === q.correctIndex) btn.classList.add('correct');
+      } else if (bi === finalAnswer.selectedIndex) {
+        btn.classList.add('correct');
+      }
+    }
+  });
+}
+
+function selectOption(idx){
+  const i = state.currentQ;
+  const q = CONFIG.questions[i];
+  if (state.answers[i]) return; // already found the right one — locked
+  if ((state.wrongTries[i] || []).includes(idx)) return; // already tried this one
+
+  const isCorrect = (q.correctIndex === -1 || idx === q.correctIndex);
+  if (isCorrect) {
+    state.answers[i] = { selectedIndex: idx };
+    qNextBtn.disabled = false;
+    showResponse(q, state.answers[i]);
+  } else {
+    if (!state.wrongTries[i]) state.wrongTries[i] = [];
+    state.wrongTries[i].push(idx);
+    showResponse(q, { selectedIndex: idx }); // shows the wrong-pick message, she can try again
+  }
+  renderOptionButtons(q, i);
+  updateDots();
+}
+
+qTextarea.addEventListener('input', () => {
+  const i = state.currentQ;
+  const value = qTextarea.value.trim();
+  if (value) {
+    state.answers[i] = { text: value };
+    qNextBtn.disabled = false;
+  } else {
+    state.answers[i] = null;
+    qNextBtn.disabled = true;
+    qResponse.classList.remove('show');
+  }
+  updateDots();
+});
+
+qTextarea.addEventListener('blur', () => {
+  const i = state.currentQ;
+  const q = CONFIG.questions[i];
+  if (state.answers[i] && state.answers[i].text) showResponse(q, state.answers[i]);
+});
+
+function showResponse(q, answer){
+  let text = '';
+  let isWrong = false;
+  if (q.type === 'mc') {
+    const isCorrect = (q.correctIndex === -1 || answer.selectedIndex === q.correctIndex);
+    // 7) THE WRONG-ANSWER LINE — edit this if you want to change what shows on a wrong pick
+    text = isCorrect ? q.response : "di yan yun HAHH";
+    isWrong = !isCorrect;
+  } else if (answer && answer.text) {
+    text = typeof q.response === 'function' ? q.response(answer.text) : q.response;
+  }
+  if (!text) return;
+  qResponse.textContent = text;
+  qResponse.classList.add('show');
+  qResponse.classList.toggle('wrong', isWrong);
+}
+
+qBackBtn.addEventListener('click', () => {
+  if (state.currentQ === 0) return;
+  state.currentQ -= 1;
+  renderQuestion();
+});
+
+qNextBtn.addEventListener('click', () => {
+  const isLast = state.currentQ === CONFIG.questions.length - 1;
+  if (isLast) {
+    finishQuestions();
+  } else {
+    state.currentQ += 1;
+    renderQuestion();
+  }
+});
+
+function finishQuestions(){
+  let score = 0, scoreable = 0;
+  CONFIG.questions.forEach((q, i) => {
+    if (q.type !== 'mc') return;
+    scoreable += 1;
+    const answer = state.answers[i];
+    if (!answer) return;
+    if (q.correctIndex === -1 || answer.selectedIndex === q.correctIndex) score += 1;
+  });
+  state.score = score;
+  state.scoreable = scoreable;
+  renderResults();
+  showScreen('screen-results');
+}
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+function renderResults(){
+  const { score, scoreable } = state;
+  document.getElementById('score-badge').textContent = `${score} / ${scoreable} 💕`;
+
+  const ratio = scoreable ? score / scoreable : 1;
+  let line;
+  if (ratio === 1) line = "You know my heart perfectly.";
+  else if (ratio >= 0.6) line = "Pretty close — and I love that you tried.";
+  else line = "However you scored, I still pick you, every time.";
+  document.getElementById('score-line').textContent = line;
+}
+
+document.getElementById('go-to-message').addEventListener('click', () => {
+  showScreen('screen-message');
+  startTypewriter();
+});
+
+/* ============================================================
+   TYPEWRITER LOVE LETTER
+   ============================================================ */
+const letterEl   = document.getElementById('letter-text');
+const signatureEl = document.getElementById('letter-signature');
+let typeTimer = null;
+
+function startTypewriter(){
+  clearInterval(typeTimer);
+  letterEl.innerHTML = '';
+  signatureEl.style.display = 'none';
+  const full = CONFIG.mainMessage;
+  let idx = 0;
+
+  const caret = document.createElement('span');
+  caret.className = 'caret';
+  caret.setAttribute('aria-hidden', 'true');
+
+  const textNode = document.createElement('span');
+  letterEl.appendChild(textNode);
+  letterEl.appendChild(caret);
+
+  typeTimer = setInterval(() => {
+    idx += 1;
+    textNode.textContent = full.slice(0, idx);
+    if (idx >= full.length) {
+      clearInterval(typeTimer);
+      caret.remove();
+      signatureEl.textContent = '— ' + CONFIG.signatureName;
+      signatureEl.style.display = 'block';
+    }
+  }, 24);
+}
+
+document.getElementById('read-again').addEventListener('click', startTypewriter);
+
+/* ============================================================
+   "OPEN WHEN YOU'RE MISSING ME" NOTE
+   ============================================================ */
+const missMeModal = document.getElementById('miss-me-modal');
+document.getElementById('miss-me-btn').addEventListener('click', () => {
+  document.getElementById('miss-me-text').textContent = CONFIG.hiddenMessage;
+  missMeModal.classList.add('open');
+  document.getElementById('miss-me-close').focus();
+});
+document.getElementById('miss-me-close').addEventListener('click', closeMissMeModal);
+missMeModal.addEventListener('click', (e) => { if (e.target === missMeModal) closeMissMeModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && missMeModal.classList.contains('open')) closeMissMeModal();
+});
+function closeMissMeModal(){
+  missMeModal.classList.remove('open');
+  document.getElementById('miss-me-btn').focus();
+}
+
+/* ============================================================
+   FINAL SCREEN
+   ============================================================ */
+document.getElementById('go-to-final').addEventListener('click', () => {
+  document.getElementById('final-text').textContent = CONFIG.finalLine;
+  showScreen('screen-final');
+});
+
+function heartTap(){
+  const rect = finalHeart.getBoundingClientRect();
+  spawnBurst(rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+const finalHeart = document.getElementById('final-heart-click');
+finalHeart.addEventListener('click', heartTap);
+finalHeart.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); heartTap(); }
+});
+
+/* ============================================================
+   RESTART
+   ============================================================ */
+document.getElementById('restart-btn').addEventListener('click', () => {
+  state.answers = [];
+  state.wrongTries = [];
+  state.currentQ = 0;
+  state.score = 0;
+  state.scoreable = 0;
+  pwInput.value = '';
+  pwError.textContent = '';
+  clearInterval(typeTimer);
+  showScreen('screen-password');
+  pwInput.focus();
+});
+
+/* ============================================================
+   BACKGROUND MUSIC (mp3)
+   Tries to play the moment the page opens. If the browser blocks
+   sound until the visitor interacts, it starts on the first tap,
+   click or keypress instead.
+   ============================================================ */
+
+const bgMusic  = document.getElementById('bg-music');
+bgMusic.src = CONFIG.musicFile;
+bgMusic.volume = CONFIG.musicVolume;
+bgMusic.muted = false; // prefer unmuted, but browsers may block autoplay
+bgMusic.addEventListener('error', () => {
+  console.warn('Music file not found. Check CONFIG.musicFile:', CONFIG.musicFile);
+});
+
+function initMusic(){
+  const p = bgMusic.play();
+  if (p && p.then) {
+    p.then(() => {
+      // playing successfully
+    }).catch(() => {
+      // autoplay with sound blocked: start muted, then unmute on first gesture
+      bgMusic.muted = true;
+      bgMusic.play().catch(() => {});
+
+      const unlock = () => {
+        bgMusic.muted = false;
+        bgMusic.volume = CONFIG.musicVolume;
+        bgMusic.play().catch(() => {});
+        document.removeEventListener('pointerdown', unlock);
+        document.removeEventListener('keydown', unlock);
+      };
+
+      document.addEventListener('pointerdown', unlock, { passive: true });
+      document.addEventListener('keydown', unlock, { passive: true });
+    });
+  }
+}
+
+initMusic();
+</script>
+</body>
+</html>
